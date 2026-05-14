@@ -25,23 +25,20 @@
   </a>
 </p>
 
-
 <p align="center">
 <strong>DepthSplat enables cross-task interactions between Gaussian splatting and depth estimation.</strong> <br>
 Left: Better depth leads to improved novel view synthesis with Gaussian splatting. <br>
 Right: Unsupervised depth pre-training with Gaussian splatting leads to reduced depth prediction error.
 </p>
 
-
 ## Updates
 
 - 2026-03-31: Check out [ReSplat](https://haofeixu.github.io/resplat/) for more compact and robust feed-forward Gaussian splatting models!
-
 - 2025-03-27: We simplified our model architecture while preparing the CVPR camera-ready version. The models have been re-trained, and the [paper](https://arxiv.org/abs/2410.13862) has been updated accordingly. [The new models](MODEL_ZOO.md) are now simpler, faster, and perform as well as or better than the previous version.
 
 ## Installation
 
-Our code is developed using PyTorch 2.4.0, CUDA 12.4, and Python 3.10. 
+Our code is developed using PyTorch 2.4.0, CUDA 12.4, and Python 3.10.
 
 We recommend setting up a virtual environment using either [conda](https://docs.anaconda.com/miniconda/) or [venv](https://docs.python.org/3/library/venv.html) before installation:
 
@@ -65,7 +62,6 @@ Our pre-trained models are hosted on [Hugging Face 🤗](https://huggingface.co/
 
 Model details can be found at [MODEL_ZOO.md](MODEL_ZOO.md).
 
-
 ## Camera Conventions
 
 The camera intrinsic matrices are normalized, with the first row divided by the image width and the second row divided by the image height.
@@ -76,18 +72,20 @@ The camera extrinsic matrices follow the OpenCV convention for camera-to-world t
 
 For dataset preparation, please refer to [DATASETS.md](DATASETS.md).
 
-
-
 ## Gaussian Splatting
 
+$env:CUDA_VISIBLE_DEVICES="0"
+python -m src.main `+experiment=dl3dv`
+mode=test `dataset/view_sampler=evaluation`
+dataset.view_sampler.num_context_views=2 `dataset.image_dir="C:/Users/BBBS-AI-01/d/brickstamp/images"`
+model.encoder.num_scales=2 `model.encoder.upsample_factor=2`
+model.encoder.lowest_feature_resolution=4 `model.encoder.monodepth_vit_type=vitl`
+checkpointing.pretrained_model="pretrained/depthsplat-gs-large-re10k-256x256-view2-e0f0f27a.pth"
 
 ### Useful configs
 
-
 <!-- <details>
 <summary>Click to expand</summary> -->
-
-
 
 - `dataset.test_chunk_interval=1`: Running on the full test set can be time-consuming due to the large number of scenes. You can run on a fraction of the test set for debugging or validation purposes. For example, setting `dataset.test_chunk_interval=10` will evaluate on 1/10 of the full test set.
 - `output_dir=outputs/depthsplat`: Directory to save the results.
@@ -101,13 +99,11 @@ For dataset preparation, please refer to [DATASETS.md](DATASETS.md).
 
 <!-- </details> -->
 
-
 ### Rendering Video
 
 DepthSplat enables feed-forward reconstruction from 12 input views (512x960 resolutions) in 0.6 seconds on a single A100 GPU.
 
 #### RealEstate10K
-
 
 <details>
 <summary>6 input views at 512x960 resolutions: click to expand the script</summary>
@@ -139,15 +135,10 @@ output_dir=outputs/depthsplat-re10k-512x960
 
 </details>
 
-
-
 https://github.com/user-attachments/assets/3f228a3f-8d54-4a90-9db4-ff0874150883
-
-
 
 <details>
 <summary>2 input views at 256x256 resolutions:</summary>
-
 
 ```
 # render video on re10k (need to have ffmpeg installed)
@@ -168,15 +159,12 @@ output_dir=outputs/depthsplat-re10k
 
 </details>
 
-
-
 #### DL3DV
 
 <details>
 <summary>12 input views at 512x960 resolutions:</summary>
 
 - A preprocessed subset is provided to quickly run inference with our model, please refer to the details in [DATASETS.md](DATASETS.md).
-
 - Tip: use `test.stablize_camera=true` to stablize the camera trajectory.
 
 ```
@@ -203,17 +191,9 @@ output_dir=outputs/depthsplat-dl3dv-512x960
 
 </details>
 
-
-
-
 https://github.com/user-attachments/assets/ea6d3b9c-af80-43e6-9a12-36c67e874366
 
-
-
-
 ### Evaluation
-
-
 
 #### RealEstate10K
 
@@ -223,6 +203,7 @@ https://github.com/user-attachments/assets/ea6d3b9c-af80-43e6-9a12-36c67e874366
 Please note that the numbers may differ slightly from those reported in the paper, as the models have been re-trained.
 
 - To evalute the large model:
+
 ```
 # Table 1 of depthsplat paper
 CUDA_VISIBLE_DEVICES=0 python -m src.main +experiment=re10k \
@@ -262,7 +243,7 @@ dataset/view_sampler=evaluation
 <details>
 <summary><b>To evaluate the small model, use:</b></summary> -->
 
-- To evaluate the small model: 
+- To evaluate the small model:
 
 ```
 # Table 1 of depthsplat paper
@@ -274,8 +255,8 @@ checkpointing.pretrained_model=pretrained/depthsplat-gs-small-re10k-256x256-view
 mode=test \
 dataset/view_sampler=evaluation
 ```
-</details>
 
+</details>
 
 #### DL3DV
 
@@ -297,7 +278,6 @@ model.encoder.lowest_feature_resolution=8 \
 model.encoder.monodepth_vit_type=vitb \
 checkpointing.pretrained_model=pretrained/depthsplat-gs-base-dl3dv-256x448-randview2-6-02c7b19d.pth
 ```
-
 
 <!-- <details>
 <summary><b>4 input views:</b></summary> -->
@@ -362,14 +342,9 @@ model.encoder.monodepth_vit_type=vitl \
 checkpointing.pretrained_model=pretrained/depthsplat-gs-large-re10k-256x256-view2-e0f0f27a.pth
 ```
 
-
 </details>
 
-
-
-
 #### ACID
-
 
 <details>
 <summary>Evaluation scripts (zero-shot generalization)</summary>
@@ -391,9 +366,7 @@ model.encoder.monodepth_vit_type=vitl \
 checkpointing.pretrained_model=pretrained/depthsplat-gs-large-re10k-256x256-view2-e0f0f27a.pth
 ```
 
-
 </details>
-
 
 ### Training
 
@@ -406,19 +379,15 @@ wget https://huggingface.co/depth-anything/Depth-Anything-V2-Small/resolve/main/
 
 - By default, we train our models using four GH200 GPUs (96GB VRAM each). However, this is not a strict requirement—our model can be trained on different GPUs as well. For example, we have verified that configurations such as four RTX 4090 GPUs (24GB VRAM each) or a single A100 GPU (80GB VRAM) can achieve very similar results, with a PSNR difference of at most 0.1 dB. Just ensure that the total number of training samples, calculated as (number of GPUs &times; `data_loader.train.batch_size` &times; `trainer.max_steps`), remains the same. Check out the scripts [scripts/re10k_depthsplat_train.sh](scripts/re10k_depthsplat_train.sh) and [scripts/dl3dv_depthsplat_train.sh](scripts/dl3dv_depthsplat_train.sh) for details.
 
-
-
 ## Depth Prediction
 
 We fine-tune our Gaussian Splatting pre-trained depth model using ground-truth depth supervision. The depth models are trained with a randomly selected number of input images (ranging from 2 to 8) and can be used for depth prediction from multi-view posed images. For more details, please refer to [scripts/inference_depth.sh](scripts/inference_depth.sh).
-
 
 <p align="center">
   <a href="">
     <img src="https://haofeixu.github.io/depthsplat/assets/depth/img_depth_c31a5a509ab9c526.png" alt="Logo" width="100%">
   </a>
 </p>
-
 
 ## Citation
 
@@ -431,10 +400,6 @@ We fine-tune our Gaussian Splatting pre-trained depth model using ground-truth d
     }
 ```
 
-
-
 ## Acknowledgements
 
 This project is developed with several fantastic repos: [pixelSplat](https://github.com/dcharatan/pixelsplat), [MVSplat](https://github.com/donydchen/mvsplat), [MVSplat360](https://github.com/donydchen/mvsplat360), [UniMatch](https://github.com/autonomousvision/unimatch), [Depth Anything V2](https://github.com/DepthAnything/Depth-Anything-V2) and [DL3DV](https://github.com/DL3DV-10K/Dataset). We thank the original authors for their excellent work.
-
-
