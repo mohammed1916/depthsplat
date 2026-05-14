@@ -1,7 +1,18 @@
 from math import isqrt
+from pathlib import Path
+import sys
 from typing import Literal
 
 import torch
+
+_DIFF_GAUSSIAN_RASTERIZATION_PATH = (
+    Path(__file__).resolve().parents[3] / "diff-gaussian-rasterization-modified"
+)
+if _DIFF_GAUSSIAN_RASTERIZATION_PATH.exists():
+    _diff_gaussian_rasterization_path = str(_DIFF_GAUSSIAN_RASTERIZATION_PATH)
+    if _diff_gaussian_rasterization_path not in sys.path:
+        sys.path.insert(0, _diff_gaussian_rasterization_path)
+
 from diff_gaussian_rasterization import (
     GaussianRasterizationSettings,
     GaussianRasterizer,
