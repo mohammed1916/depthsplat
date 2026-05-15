@@ -4,11 +4,9 @@ from typing import Optional, Protocol, runtime_checkable
 
 import moviepy.editor as mpy
 import torch
-import wandb
 from einops import pack, rearrange, repeat, einsum
 from jaxtyping import Float
 from pytorch_lightning import LightningModule
-from pytorch_lightning.loggers.wandb import WandbLogger
 from pytorch_lightning.utilities import rank_zero_only
 from torch import Tensor, nn, optim
 import numpy as np
@@ -48,6 +46,16 @@ from src.visualization.vis_depth import viz_depth_tensor
 from PIL import Image
 from ..misc.stablize_camera import render_stabilization_path
 from .ply_export import save_gaussian_ply
+
+try:
+    import wandb
+except Exception:
+    wandb = None
+
+try:
+    from pytorch_lightning.loggers.wandb import WandbLogger
+except Exception:
+    WandbLogger = None
 
 
 @dataclass
@@ -108,7 +116,7 @@ class TrajectoryFn(Protocol):
 
 
 class ModelWrapper(LightningModule):
-    logger: Optional[WandbLogger]
+    logger: Optional[object]
     encoder: nn.Module
     encoder_visualizer: Optional[EncoderVisualizer]
     decoder: Decoder
@@ -1082,23 +1090,20 @@ class ModelWrapper(LightningModule):
                  255).type(torch.uint8).cpu().numpy()
         if loop_reverse:
             video = pack([video, video[::-1][1:-1]], "* c h w")[0]
-        visualizations = {
-            f"video/{name}": wandb.Video(video[None], fps=30, format="mp4")
-        }
-
-        # Since the PyTorch Lightning doesn't support video logging, log to wandb directly.
-        try:
+        if wandb is not None and getattr(wandb, "run", None) is not None:
+            visualizations = {
+                f"video/{name}": wandb.Video(video[None], fps=30, format="mp4")
+            }
             wandb.log(visualizations)
-        except Exception:
-            assert isinstance(self.logger, LocalLogger)
-            for key, value in visualizations.items():
-                tensor = value._prepare_video(value.data)
-                clip = mpy.ImageSequenceClip(list(tensor), fps=value._fps)
-                dir = self.logger.log_path / key
-                dir.mkdir(exist_ok=True, parents=True)
-                clip.write_videofile(
-                    str(dir / f"{self.global_step:0>6}.mp4"), logger=None
-                )
+            return
+
+        assert isinstance(self.logger, LocalLogger)
+        self.logger.log_video(
+            f"video/{name}",
+            video[None],
+            step=self.global_step,
+            fps=30,
+        )
 
     def configure_optimizers(self):
         if self.optimizer_cfg.lr_monodepth > 0:

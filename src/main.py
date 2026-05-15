@@ -5,7 +5,6 @@ import copy
 
 import hydra
 import torch
-import wandb
 from colorama import Fore
 from jaxtyping import install_import_hook
 from omegaconf import DictConfig, OmegaConf
@@ -14,7 +13,16 @@ from pytorch_lightning.callbacks import (
     LearningRateMonitor,
     ModelCheckpoint,
 )
-from pytorch_lightning.loggers.wandb import WandbLogger
+
+try:
+    import wandb
+except Exception:
+    wandb = None
+
+try:
+    from pytorch_lightning.loggers.wandb import WandbLogger
+except Exception:
+    WandbLogger = None
 
 from pytorch_lightning.plugins.environments import LightningEnvironment
 
@@ -81,9 +89,9 @@ def train(cfg_dict: DictConfig):
         os.makedirs(output_dir, exist_ok=True)
     print(cyan(f"Saving outputs to {output_dir}."))
 
-    # Set up logging with wandb.
+    # Set up logging.
     callbacks = []
-    if cfg_dict.wandb.mode != "disabled" and cfg.mode == "train":
+    if wandb is not None and WandbLogger is not None and cfg_dict.wandb.mode != "disabled" and cfg.mode == "train":
         wandb_extra_kwargs = {}
         if cfg_dict.wandb.id is not None:
             wandb_extra_kwargs.update({'id': cfg_dict.wandb.id,
@@ -104,7 +112,11 @@ def train(cfg_dict: DictConfig):
         if wandb.run is not None:
             wandb.run.log_code("src")
     else:
-        logger = LocalLogger(log_dir=output_dir / "local")
+        logger = LocalLogger(log_dir=output_dir / "tensorboard")
+        if wandb is None:
+            print(cyan("WandB is unavailable; using TensorBoard/local logging instead."))
+        elif cfg_dict.wandb.mode == "disabled":
+            print(cyan("WandB disabled; using TensorBoard/local logging instead."))
 
     # Set up checkpointing.
     callbacks.append(

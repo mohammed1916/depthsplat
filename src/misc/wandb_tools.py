@@ -1,6 +1,9 @@
 from pathlib import Path
 
-import wandb
+try:
+    import wandb
+except Exception:
+    wandb = None
 
 
 def version_to_int(artifact) -> int:
@@ -13,6 +16,9 @@ def download_checkpoint(
     download_dir: Path,
     version: str | None,
 ) -> Path:
+    if wandb is None:
+        raise ImportError(
+            "wandb is required to download checkpoints from wandb:// paths")
     api = wandb.Api()
     run = api.run(run_id)
 
@@ -46,7 +52,11 @@ def update_checkpoint_path(path: str | None, wandb_cfg: dict) -> Path | None:
     if not str(path).startswith("wandb://"):
         return Path(path)
 
-    run_id, *version = path[len("wandb://") :].split(":")
+    if wandb is None:
+        raise ImportError(
+            "wandb is required to resolve wandb:// checkpoint paths")
+
+    run_id, *version = path[len("wandb://"):].split(":")
     if len(version) == 0:
         version = None
     elif len(version) == 1:

@@ -4,10 +4,14 @@ from typing import Optional
 
 import numpy as np
 import torch
-import wandb
 from einops import rearrange, reduce, repeat
 from jaxtyping import Bool, Float
 from torch import Tensor
+
+try:
+    import wandb
+except Exception:
+    wandb = None
 
 from ....dataset.types import BatchedViews
 from ....misc.heterogeneous_pairings import generate_heterogeneous_index
@@ -82,7 +86,7 @@ class EncoderVisualizerDepthSplat(
             )
 
         # This is kind of hacky for now, since we're using it for short experiments.
-        if self.cfg.export_ply and wandb.run is not None:
+        if self.cfg.export_ply and wandb is not None and getattr(wandb, "run", None) is not None:
             name = wandb.run._name.split(" ")[0]
             ply_path = Path(f"outputs/gaussians/{name}/{global_step:0>6}.ply")
             export_ply(
@@ -183,10 +187,12 @@ class EncoderVisualizerDepthSplat(
                 vis_layer_head = draw_lines(
                     context_images[rb, self.encoder.sampler.index_v[rv, rov]],
                     rearrange(
-                        sampling.xy_sample_near[rb, rv, rov, rr], "r s xy -> (r s) xy"
+                        sampling.xy_sample_near[rb, rv,
+                                                rov, rr], "r s xy -> (r s) xy"
                     ),
                     rearrange(
-                        sampling.xy_sample_far[rb, rv, rov, rr], "r s xy -> (r s) xy"
+                        sampling.xy_sample_far[rb, rv,
+                                               rov, rr], "r s xy -> (r s) xy"
                     ),
                     color,
                     3,
@@ -196,8 +202,10 @@ class EncoderVisualizerDepthSplat(
                 )
                 vis_layer.append(vis_layer_head)
             vis.append(add_label(vcat(*vis_layer), f"Layer {il}"))
-        vis = add_label(add_border(add_border(hcat(*vis)), 1, 0), "Keys & Values")
-        vis = add_border(hcat(add_label(ray_view, "ray_view"), vis, align="top"))
+        vis = add_label(add_border(add_border(
+            hcat(*vis)), 1, 0), "Keys & Values")
+        vis = add_border(
+            hcat(add_label(ray_view, "ray_view"), vis, align="top"))
         return vis
 
     def visualize_depth(
@@ -215,15 +223,18 @@ class EncoderVisualizerDepthSplat(
             near = rearrange(context["near"], "b v -> b v () ()")
             far = rearrange(context["far"], "b v -> b v () ()")
             relative_depth = (depth - near) / (far - near)
-            relative_disparity = 1 - (1 / depth - 1 / far) / (1 / near - 1 / far)
+            relative_disparity = 1 - \
+                (1 / depth - 1 / far) / (1 / near - 1 / far)
 
             relative_depth = apply_color_map_to_image(relative_depth, "turbo")
             relative_depth = vcat(*[hcat(*x) for x in relative_depth])
             relative_depth = add_label(relative_depth, "Depth")
-            relative_disparity = apply_color_map_to_image(relative_disparity, "turbo")
+            relative_disparity = apply_color_map_to_image(
+                relative_disparity, "turbo")
             relative_disparity = vcat(*[hcat(*x) for x in relative_disparity])
             relative_disparity = add_label(relative_disparity, "Disparity")
-            multi_vis.append(add_border(hcat(relative_depth, relative_disparity)))
+            multi_vis.append(add_border(
+                hcat(relative_depth, relative_disparity)))
 
         return add_border(vcat(*multi_vis))
 
@@ -235,7 +246,8 @@ class EncoderVisualizerDepthSplat(
     ) -> Float[Tensor, "3 vis_width vis_height"]:
         device = context_images.device
         b, v, _, h, w = context_images.shape
-        green = torch.tensor([0.235, 0.706, 0.294], device=device)[..., None, None]
+        green = torch.tensor([0.235, 0.706, 0.294],
+                             device=device)[..., None, None]
         rb = randrange(b)
         valid = sampling.valid[rb].float()
         ds = self.encoder.cfg.epipolar_transformer.downscale
@@ -251,14 +263,16 @@ class EncoderVisualizerDepthSplat(
 
         if is_monocular is not None:
             is_monocular = is_monocular[rb].float()
-            is_monocular = repeat(is_monocular, "v h w -> v c h w", c=3, h=h, w=w)
+            is_monocular = repeat(
+                is_monocular, "v h w -> v c h w", c=3, h=h, w=w)
 
         # Select context images in grid.
         context_images = context_images[rb]
         index, _ = generate_heterogeneous_index(v)
         valid = valid * (green + context_images[index]) / 2
 
-        vis = vcat(*(hcat(im, hcat(*v)) for im, v in zip(context_images, valid)))
+        vis = vcat(*(hcat(im, hcat(*v))
+                   for im, v in zip(context_images, valid)))
         vis = add_label(vis, "Context Overlaps")
 
         if is_monocular is not None:
@@ -279,7 +293,8 @@ class EncoderVisualizerDepthSplat(
         opacities = repeat(
             opacities[rb], "(v h w spp) -> spp v c h w", v=v, c=3, h=h, w=w
         )
-        colors = rearrange(colors[rb], "(v h w spp) c -> spp v c h w", v=v, h=h, w=w)
+        colors = rearrange(
+            colors[rb], "(v h w spp) c -> spp v c h w", v=v, h=h, w=w)
 
         # Color-map Gaussian covariawnces.
         det = covariances[rb].det()
@@ -289,11 +304,14 @@ class EncoderVisualizerDepthSplat(
         return add_border(
             hcat(
                 add_label(box(hcat(*context_images)), "Context"),
-                add_label(box(vcat(*[hcat(*x) for x in opacities])), "Opacities"),
+                add_label(box(vcat(*[hcat(*x)
+                          for x in opacities])), "Opacities"),
                 add_label(
-                    box(vcat(*[hcat(*x) for x in (colors * opacities)])), "Colors"
+                    box(vcat(*[hcat(*x)
+                        for x in (colors * opacities)])), "Colors"
                 ),
-                add_label(box(vcat(*[hcat(*x) for x in colors])), "Colors (Raw)"),
+                add_label(box(vcat(*[hcat(*x)
+                          for x in colors])), "Colors (Raw)"),
                 add_label(box(vcat(*[hcat(*x) for x in det])), "Determinant"),
             )
         )
@@ -341,8 +359,10 @@ class EncoderVisualizerDepthSplat(
         colors = rearrange(colors, "r c -> r () c")
         sample_view = draw_lines(
             context_images[rb, self.encoder.sampler.index_v[rv, rov]],
-            rearrange(sampling.xy_sample_near[rb, rv, rov, rr], "r s xy -> (r s) xy"),
-            rearrange(sampling.xy_sample_far[rb, rv, rov, rr], "r s xy -> (r s) xy"),
+            rearrange(
+                sampling.xy_sample_near[rb, rv, rov, rr], "r s xy -> (r s) xy"),
+            rearrange(
+                sampling.xy_sample_far[rb, rv, rov, rr], "r s xy -> (r s) xy"),
             rearrange(pdf * colors, "r s c -> (r s) c"),
             6,
             cap="butt",
@@ -354,8 +374,10 @@ class EncoderVisualizerDepthSplat(
         pdf_magnified = pdf / reduce(pdf, "r s () -> r () ()", "max")
         sample_view_magnified = draw_lines(
             context_images[rb, self.encoder.sampler.index_v[rv, rov]],
-            rearrange(sampling.xy_sample_near[rb, rv, rov, rr], "r s xy -> (r s) xy"),
-            rearrange(sampling.xy_sample_far[rb, rv, rov, rr], "r s xy -> (r s) xy"),
+            rearrange(
+                sampling.xy_sample_near[rb, rv, rov, rr], "r s xy -> (r s) xy"),
+            rearrange(
+                sampling.xy_sample_far[rb, rv, rov, rr], "r s xy -> (r s) xy"),
             rearrange(pdf_magnified * colors, "r s c -> (r s) c"),
             6,
             cap="butt",
@@ -431,8 +453,10 @@ class EncoderVisualizerDepthSplat(
         # Draw the alternating bucket lines.
         sample_view = draw_lines(
             sample_view,
-            rearrange(sampling.xy_sample_near[rb, rv, rov, rr], "r s xy -> (r s) xy"),
-            rearrange(sampling.xy_sample_far[rb, rv, rov, rr], "r s xy -> (r s) xy"),
+            rearrange(
+                sampling.xy_sample_near[rb, rv, rov, rr], "r s xy -> (r s) xy"),
+            rearrange(
+                sampling.xy_sample_far[rb, rv, rov, rr], "r s xy -> (r s) xy"),
             color,
             3,
             cap="butt",
@@ -443,7 +467,8 @@ class EncoderVisualizerDepthSplat(
         # Draw the sample points.
         sample_view = draw_points(
             sample_view,
-            rearrange(sampling.xy_sample[rb, rv, rov, rr], "r s xy -> (r s) xy"),
+            rearrange(sampling.xy_sample[rb, rv,
+                      rov, rr], "r s xy -> (r s) xy"),
             0,
             radius=4,
             x_range=(0, 1),
@@ -451,7 +476,8 @@ class EncoderVisualizerDepthSplat(
         )
         sample_view = draw_points(
             sample_view,
-            rearrange(sampling.xy_sample[rb, rv, rov, rr], "r s xy -> (r s) xy"),
+            rearrange(sampling.xy_sample[rb, rv,
+                      rov, rr], "r s xy -> (r s) xy"),
             [get_distinct_color(i // s) for i in range(s * len(rr))],
             radius=3,
             x_range=(0, 1),
@@ -459,7 +485,8 @@ class EncoderVisualizerDepthSplat(
         )
 
         return add_border(
-            hcat(add_label(ray_view, "Ray View"), add_label(sample_view, "Sample View"))
+            hcat(add_label(ray_view, "Ray View"),
+                 add_label(sample_view, "Sample View"))
         )
 
     def visualize_epipolar_color_samples(
@@ -507,7 +534,8 @@ class EncoderVisualizerDepthSplat(
         # Visualize the samples and in the sample view.
         sample_view = draw_points(
             context_images[rb, self.encoder.sampler.index_v[rv, rov]],
-            rearrange(sampling.xy_sample[rb, rv, rov, rr], "r s xy -> (r s) xy"),
+            rearrange(sampling.xy_sample[rb, rv,
+                      rov, rr], "r s xy -> (r s) xy"),
             [get_distinct_color(i // s) for i in range(s * len(rr))],
             radius=4,
             x_range=(0, 1),
@@ -515,7 +543,8 @@ class EncoderVisualizerDepthSplat(
         )
         sample_view = draw_points(
             sample_view,
-            rearrange(sampling.xy_sample[rb, rv, rov, rr], "r s xy -> (r s) xy"),
+            rearrange(sampling.xy_sample[rb, rv,
+                      rov, rr], "r s xy -> (r s) xy"),
             rearrange(sampling.features[rb, rv, rov, rr], "r s c -> (r s) c"),
             radius=3,
             x_range=(0, 1),
@@ -523,5 +552,6 @@ class EncoderVisualizerDepthSplat(
         )
 
         return add_border(
-            hcat(add_label(ray_view, "Ray View"), add_label(sample_view, "Sample View"))
+            hcat(add_label(ray_view, "Ray View"),
+                 add_label(sample_view, "Sample View"))
         )
