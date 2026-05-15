@@ -104,7 +104,7 @@ def train(cfg_dict: DictConfig):
         if wandb.run is not None:
             wandb.run.log_code("src")
     else:
-        logger = LocalLogger()
+        logger = LocalLogger(log_dir=output_dir / "local")
 
     # Set up checkpointing.
     callbacks.append(
@@ -127,7 +127,8 @@ def train(cfg_dict: DictConfig):
             checkpoint_path = find_latest_ckpt(output_dir / 'checkpoints')
             print(f'resume from {checkpoint_path}')
     else:
-        checkpoint_path = update_checkpoint_path(cfg.checkpointing.load, cfg.wandb)
+        checkpoint_path = update_checkpoint_path(
+            cfg.checkpointing.load, cfg.wandb)
 
     # This allows the current step to be shared with the data loader processes.
     step_tracker = StepTracker()
@@ -182,11 +183,13 @@ def train(cfg_dict: DictConfig):
         # only load monodepth
         if cfg.checkpointing.pretrained_monodepth is not None:
             strict_load = False
-            pretrained_model = torch.load(cfg.checkpointing.pretrained_monodepth, map_location='cpu')
+            pretrained_model = torch.load(
+                cfg.checkpointing.pretrained_monodepth, map_location='cpu')
             if 'state_dict' in pretrained_model:
                 pretrained_model = pretrained_model['state_dict']
 
-            model_wrapper.encoder.depth_predictor.load_state_dict(pretrained_model, strict=strict_load)
+            model_wrapper.encoder.depth_predictor.load_state_dict(
+                pretrained_model, strict=strict_load)
             print(
                 cyan(
                     f"Loaded pretrained monodepth: {cfg.checkpointing.pretrained_monodepth}"
@@ -195,18 +198,21 @@ def train(cfg_dict: DictConfig):
 
         # load pretrained mvdepth
         if cfg.checkpointing.pretrained_mvdepth is not None:
-            pretrained_model = torch.load(cfg.checkpointing.pretrained_mvdepth, map_location='cpu')['model']
+            pretrained_model = torch.load(
+                cfg.checkpointing.pretrained_mvdepth, map_location='cpu')['model']
 
-            model_wrapper.encoder.depth_predictor.load_state_dict(pretrained_model, strict=False)
+            model_wrapper.encoder.depth_predictor.load_state_dict(
+                pretrained_model, strict=False)
             print(
                 cyan(
                     f"Loaded pretrained mvdepth: {cfg.checkpointing.pretrained_mvdepth}"
                 )
             )
-        
+
         # load full model
         if cfg.checkpointing.pretrained_model is not None:
-            pretrained_model = torch.load(cfg.checkpointing.pretrained_model, map_location='cpu')
+            pretrained_model = torch.load(
+                cfg.checkpointing.pretrained_model, map_location='cpu')
             if 'state_dict' in pretrained_model:
                 pretrained_model = pretrained_model['state_dict']
 
@@ -219,21 +225,25 @@ def train(cfg_dict: DictConfig):
 
         # load pretrained depth
         if cfg.checkpointing.pretrained_depth is not None:
-            pretrained_model = torch.load(cfg.checkpointing.pretrained_depth, map_location='cpu')['model']
+            pretrained_model = torch.load(
+                cfg.checkpointing.pretrained_depth, map_location='cpu')['model']
 
             strict_load = True
-            model_wrapper.encoder.depth_predictor.load_state_dict(pretrained_model, strict=strict_load)
+            model_wrapper.encoder.depth_predictor.load_state_dict(
+                pretrained_model, strict=strict_load)
             print(
                 cyan(
                     f"Loaded pretrained depth: {cfg.checkpointing.pretrained_depth}"
                 )
             )
-            
-        trainer.fit(model_wrapper, datamodule=data_module, ckpt_path=checkpoint_path)
+
+        trainer.fit(model_wrapper, datamodule=data_module,
+                    ckpt_path=checkpoint_path)
     else:
         # load full model
         if cfg.checkpointing.pretrained_model is not None:
-            pretrained_model = torch.load(cfg.checkpointing.pretrained_model, map_location='cpu')
+            pretrained_model = torch.load(
+                cfg.checkpointing.pretrained_model, map_location='cpu')
             if 'state_dict' in pretrained_model:
                 pretrained_model = pretrained_model['state_dict']
 
@@ -246,16 +256,18 @@ def train(cfg_dict: DictConfig):
 
         # load pretrained depth model only
         if cfg.checkpointing.pretrained_depth is not None:
-            pretrained_model = torch.load(cfg.checkpointing.pretrained_depth, map_location='cpu')['model']
+            pretrained_model = torch.load(
+                cfg.checkpointing.pretrained_depth, map_location='cpu')['model']
 
             strict_load = True
-            model_wrapper.encoder.depth_predictor.load_state_dict(pretrained_model, strict=strict_load)
+            model_wrapper.encoder.depth_predictor.load_state_dict(
+                pretrained_model, strict=strict_load)
             print(
                 cyan(
                     f"Loaded pretrained depth: {cfg.checkpointing.pretrained_depth}"
                 )
             )
-            
+
         trainer.test(
             model_wrapper,
             datamodule=data_module,

@@ -27,7 +27,7 @@ from ..global_cfg import get_cfg
 from ..loss import Loss
 from ..misc.benchmarker import Benchmarker
 from ..misc.image_io import prep_image, save_image, save_video
-from ..misc.LocalLogger import LOG_PATH, LocalLogger
+from ..misc.LocalLogger import LocalLogger
 from ..misc.step_tracker import StepTracker
 from ..visualization.annotation import add_label
 from ..visualization.camera_trajectory.interpolation import (
@@ -1065,7 +1065,7 @@ class ModelWrapper(LightningModule):
             for key, value in visualizations.items():
                 tensor = value._prepare_video(value.data)
                 clip = mpy.ImageSequenceClip(list(tensor), fps=value._fps)
-                dir = LOG_PATH / key
+                dir = self.logger.log_path / key
                 dir.mkdir(exist_ok=True, parents=True)
                 clip.write_videofile(
                     str(dir / f"{self.global_step:0>6}.mp4"), logger=None

@@ -8,23 +8,15 @@ from PIL import Image
 from pytorch_lightning.loggers.logger import Logger
 from pytorch_lightning.utilities import rank_zero_only
 
+# Default fallback path; callers should pass log_dir to LocalLogger instead.
 LOG_PATH = Path("outputs/local")
 
 
 class LocalLogger(Logger):
-    def __init__(self) -> None:
+    def __init__(self, log_dir: Optional[Path] = None) -> None:
         super().__init__()
         self.experiment = None
-        # Cross-platform safe removal of previous local outputs
-        try:
-            import shutil
-
-            if LOG_PATH.exists():
-                shutil.rmtree(LOG_PATH)
-        except Exception:
-            # Best-effort cleanup; ignore on Windows or if removal fails
-            print(
-                f"Warning: Could not clean up previous local logs at {LOG_PATH}. Old logs may be mixed with new ones.")
+        self.log_path = Path(log_dir) if log_dir is not None else LOG_PATH
 
     @property
     def name(self):
@@ -54,7 +46,7 @@ class LocalLogger(Logger):
         # actually required.
         assert step is not None
         for index, image in enumerate(images):
-            path = LOG_PATH / f"{key}/{index:0>2}_{step:0>6}.png"
+            path = self.log_path / f"{key}/{index:0>2}_{step:0>6}.png"
             path.parent.mkdir(exist_ok=True, parents=True)
             if isinstance(image, torch.Tensor):
                 Image.fromarray(image.permute(
