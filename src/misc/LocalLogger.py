@@ -15,7 +15,16 @@ class LocalLogger(Logger):
     def __init__(self) -> None:
         super().__init__()
         self.experiment = None
-        os.system(f"rm -r {LOG_PATH}")
+        # Cross-platform safe removal of previous local outputs
+        try:
+            import shutil
+
+            if LOG_PATH.exists():
+                shutil.rmtree(LOG_PATH)
+        except Exception:
+            # Best-effort cleanup; ignore on Windows or if removal fails
+            print(
+                f"Warning: Could not clean up previous local logs at {LOG_PATH}. Old logs may be mixed with new ones.")
 
     @property
     def name(self):
@@ -48,6 +57,7 @@ class LocalLogger(Logger):
             path = LOG_PATH / f"{key}/{index:0>2}_{step:0>6}.png"
             path.parent.mkdir(exist_ok=True, parents=True)
             if isinstance(image, torch.Tensor):
-                Image.fromarray(image.permute(1, 2, 0).numpy().astype(np.uint8)).save(path)
+                Image.fromarray(image.permute(
+                    1, 2, 0).numpy().astype(np.uint8)).save(path)
             else:
                 Image.fromarray(image).save(path)
