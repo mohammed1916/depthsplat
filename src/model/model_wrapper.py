@@ -170,7 +170,8 @@ class ModelWrapper(LightningModule):
 
         if gaussians.means.size(0) != batch["target"]["extrinsics"].size(0):
             supervise_intermediate_depth = True
-            assert gaussians.means.size(0) % batch["target"]["extrinsics"].size(0) == 0
+            assert gaussians.means.size(
+                0) % batch["target"]["extrinsics"].size(0) == 0
             num_depths = gaussians.means.size(0) // batch["target"]["extrinsics"].size(
                 0
             )
@@ -181,8 +182,10 @@ class ModelWrapper(LightningModule):
             target_intrinsics = torch.cat(
                 [batch["target"]["intrinsics"]] * num_depths, dim=0
             )
-            target_near = torch.cat([batch["target"]["near"]] * num_depths, dim=0)
-            target_far = torch.cat([batch["target"]["far"]] * num_depths, dim=0)
+            target_near = torch.cat(
+                [batch["target"]["near"]] * num_depths, dim=0)
+            target_far = torch.cat(
+                [batch["target"]["far"]] * num_depths, dim=0)
 
             output_all = self.decoder.forward(
                 gaussians,
@@ -265,16 +268,17 @@ class ModelWrapper(LightningModule):
             for loss_fn in self.losses:
                 if output_intermediate.color.size(0) != batch_size:
                     assert output_intermediate.color.size(0) % batch_size == 0
-                    num_intermediate = output_intermediate.color.size(0) // batch_size
+                    num_intermediate = output_intermediate.color.size(
+                        0) // batch_size
                     intermediate_loss = 0
                     for i in range(num_intermediate):
                         curr_output = DecoderOutput(
                             color=output_intermediate.color[
-                                (batch_size * i) : (batch_size * (i + 1))
+                                (batch_size * i): (batch_size * (i + 1))
                             ],
                             depth=(
                                 output_intermediate.depth[
-                                    (batch_size * i) : (batch_size * (i + 1))
+                                    (batch_size * i): (batch_size * (i + 1))
                                 ]
                                 if output_intermediate.depth is not None
                                 else None
@@ -305,7 +309,8 @@ class ModelWrapper(LightningModule):
 
                         intermediate_loss = intermediate_loss + curr_loss_weight * loss
 
-                    self.log(f"loss/{loss_fn.name}_intermediate", intermediate_loss)
+                    self.log(
+                        f"loss/{loss_fn.name}_intermediate", intermediate_loss)
                     total_loss = total_loss + intermediate_loss
                 else:
                     if loss_fn.name == "mse":
@@ -345,8 +350,10 @@ class ModelWrapper(LightningModule):
                 f"{batch['context']['far'].detach().cpu().numpy().mean()}]; "
                 f"loss = {total_loss:.6f}"
             )
-        self.log("info/near", batch["context"]["near"].detach().cpu().numpy().mean())
-        self.log("info/far", batch["context"]["far"].detach().cpu().numpy().mean())
+        self.log("info/near", batch["context"]
+                 ["near"].detach().cpu().numpy().mean())
+        self.log("info/far", batch["context"]
+                 ["far"].detach().cpu().numpy().mean())
         self.log("info/global_step", self.global_step)  # hack for ckpt monitor
 
         # Tell the data loader processes about the current step.
@@ -368,13 +375,15 @@ class ModelWrapper(LightningModule):
         # save input views for visualization
         if self.test_cfg.save_input_images:
             (scene,) = batch["scene"]
-            self.test_cfg.output_path = os.path.join(get_cfg()["output_dir"], "metrics")
+            self.test_cfg.output_path = os.path.join(
+                get_cfg()["output_dir"], "metrics")
             path = Path(get_cfg()["output_dir"])
 
             input_images = batch["context"]["image"][0]  # [V, 3, H, W]
             index = batch["context"]["index"][0]
             for idx, color in zip(index, input_images):
-                save_image(color, path / "images" / scene / f"color/input_{idx:0>6}.png")
+                save_image(color, path / "images" / scene /
+                           f"color/input_{idx:0>6}.png")
 
         # save depth vis
         if self.test_cfg.save_depth or self.test_cfg.save_gaussian:
@@ -400,7 +409,8 @@ class ModelWrapper(LightningModule):
         # save gaussians
         if self.test_cfg.save_gaussian:
             scene = batch["scene"][0]
-            save_path = Path(get_cfg()['output_dir']) / 'gaussians' / (scene + '.ply')
+            save_path = Path(get_cfg()['output_dir']) / \
+                'gaussians' / (scene + '.ply')
             save_gaussian_ply(gaussians, visualization_dump, batch, save_path)
 
         if not self.train_cfg.forward_depth_only:
@@ -470,7 +480,8 @@ class ModelWrapper(LightningModule):
                     )
 
         (scene,) = batch["scene"]
-        self.test_cfg.output_path = os.path.join(get_cfg()["output_dir"], "metrics")
+        self.test_cfg.output_path = os.path.join(
+            get_cfg()["output_dir"], "metrics")
         path = Path(get_cfg()["output_dir"])
 
         # save depth
@@ -479,7 +490,8 @@ class ModelWrapper(LightningModule):
                 depth = pred_depths[0].cpu().detach()  # [V, H, W]
             else:
                 depth = (
-                    visualization_dump["depth"][0, :, :, :, 0, 0].cpu().detach()
+                    visualization_dump["depth"][0,
+                                                :, :, :, 0, 0].cpu().detach()
                 )  # [V, H, W]
 
             index = batch["context"]["index"][0]
@@ -488,7 +500,8 @@ class ModelWrapper(LightningModule):
                 # concat (img0, img1, depth0, depth1)
                 image = batch['context']['image'][0]  # [V, 3, H, W] in [0,1]
                 image = rearrange(image, "b c h w -> h (b w) c")  # [H, VW, 3]
-                image_concat = (image.detach().cpu().numpy() * 255).astype(np.uint8)  # [H, VW, 3]
+                image_concat = (image.detach().cpu().numpy() *
+                                255).astype(np.uint8)  # [H, VW, 3]
 
                 depth_concat = []
 
@@ -500,7 +513,8 @@ class ModelWrapper(LightningModule):
                 if self.test_cfg.save_depth_concat_img:
                     depth_concat.append(depth_viz)
 
-                save_path = path / "images" / scene / "depth" / f"{idx:0>6}.png"
+                save_path = path / "images" / \
+                    scene / "depth" / f"{idx:0>6}.png"
                 save_dir = os.path.dirname(save_path)
                 os.makedirs(save_dir, exist_ok=True)
                 Image.fromarray(depth_viz).save(save_path)
@@ -508,16 +522,20 @@ class ModelWrapper(LightningModule):
                 # save depth as npy
                 if self.test_cfg.save_depth_npy:
                     depth_npy = depth_i.detach().cpu().numpy()
-                    save_path = path / "images" / scene / "depth" / f"{idx:0>6}.npy"
+                    save_path = path / "images" / \
+                        scene / "depth" / f"{idx:0>6}.npy"
                     save_dir = os.path.dirname(save_path)
                     os.makedirs(save_dir, exist_ok=True)
                     np.save(save_path, depth_npy)
 
             if self.test_cfg.save_depth_concat_img:
-                depth_concat = np.concatenate(depth_concat, axis=1)  # [H, VW, 3]
-                concat = np.concatenate((image_concat, depth_concat), axis=0)  # [2H, VW, 3]
+                depth_concat = np.concatenate(
+                    depth_concat, axis=1)  # [H, VW, 3]
+                concat = np.concatenate(
+                    (image_concat, depth_concat), axis=0)  # [2H, VW, 3]
 
-                save_path = path / "images" / scene / "depth" /  f"img_depth_{scene}.png"
+                save_path = path / "images" / scene / \
+                    "depth" / f"img_depth_{scene}.png"
                 save_dir = os.path.dirname(save_path)
                 os.makedirs(save_dir, exist_ok=True)
                 Image.fromarray(concat).save(save_path)
@@ -534,15 +552,19 @@ class ModelWrapper(LightningModule):
                 for index, color, gt in zip(
                     batch["target"]["index"][0], images_prob, rgb_gt
                 ):
-                    save_image(color, path / "images" / scene / f"color/{index:0>6}.png")
-                    save_image(gt, path / "images" / scene / f"color/{index:0>6}_gt.png")
+                    save_image(color, path / "images" /
+                               scene / f"color/{index:0>6}.png")
+                    save_image(gt, path / "images" / scene /
+                               f"color/{index:0>6}_gt.png")
             else:
                 for index, color in zip(batch["target"]["index"][0], images_prob):
-                    save_image(color, path / "images" / scene / f"color/{index:0>6}.png")
+                    save_image(color, path / "images" /
+                               scene / f"color/{index:0>6}.png")
 
         # save video
         if self.test_cfg.save_video:
-            frame_str = "_".join([str(x.item()) for x in batch["context"]["index"][0]])
+            frame_str = "_".join([str(x.item())
+                                 for x in batch["context"]["index"][0]])
             save_video(
                 [a for a in images_prob],
                 path / "videos" / f"{scene}_frame_{frame_str}.mp4",
@@ -590,7 +612,7 @@ class ModelWrapper(LightningModule):
                 metric_scores.clear()
 
             for tag, times in self.benchmarker.execution_times.items():
-                times = times[int(self.time_skip_steps_dict[tag]) :]
+                times = times[int(self.time_skip_steps_dict[tag]):]
                 saved_scores[tag] = [len(times), np.mean(times)]
                 print(
                     f"{tag}: {len(times)} calls, avg. {np.mean(times)} seconds per call"
@@ -733,7 +755,8 @@ class ModelWrapper(LightningModule):
                 for k, image in self.encoder_visualizer.visualize(
                     batch["context"], self.global_step
                 ).items():
-                    self.logger.log_image(k, [prep_image(image)], step=self.global_step)
+                    self.logger.log_image(
+                        k, [prep_image(image)], step=self.global_step)
 
             # Run video validation step.
             if not self.train_cfg.no_viz_video:
@@ -761,7 +784,8 @@ class ModelWrapper(LightningModule):
                         )
                     )
                     backup_dir = str(
-                        Path(ckpt_saved_path).parent.parent / "checkpoints_backups"
+                        Path(ckpt_saved_path).parent.parent /
+                        "checkpoints_backups"
                     )
                     if self.global_rank == 0:
                         os.makedirs(backup_dir, exist_ok=True)
@@ -817,7 +841,8 @@ class ModelWrapper(LightningModule):
                 break
 
             batch = self.data_shim(batch)
-            batch = self.transfer_batch_to_device(batch, "cuda", dataloader_idx=0)
+            batch = self.transfer_batch_to_device(
+                batch, "cuda", dataloader_idx=0)
 
             # Render Gaussians.
             b, v, _, h, w = batch["target"]["image"].shape
@@ -890,8 +915,9 @@ class ModelWrapper(LightningModule):
                     self.log(f"test/{score_tag}", cur_mean)
         # summarise run time
         for tag, times in self.benchmarker.execution_times.items():
-            times = times[int(time_skip_steps_dict[tag]) :]
-            print(f"{tag}: {len(times)} calls, avg. {np.mean(times)} seconds per call")
+            times = times[int(time_skip_steps_dict[tag]):]
+            print(
+                f"{tag}: {len(times)} calls, avg. {np.mean(times)} seconds per call")
             self.log(f"test/runtime_avg_{tag}", np.mean(times))
         self.benchmarker.clear_history()
 
@@ -1008,13 +1034,15 @@ class ModelWrapper(LightningModule):
         loop_reverse: bool = True,
     ) -> None:
         # Render probabilistic estimate of scene.
-        gaussians_prob = self.encoder(batch["context"], self.global_step, False)
+        gaussians_prob = self.encoder(
+            batch["context"], self.global_step, False)
         # gaussians_det = self.encoder(batch["context"], self.global_step, True)
 
         if isinstance(gaussians_prob, dict):
             gaussians_prob = gaussians_prob["gaussians"]
 
-        t = torch.linspace(0, 1, num_frames, dtype=torch.float32, device=self.device)
+        t = torch.linspace(
+            0, 1, num_frames, dtype=torch.float32, device=self.device)
         if smooth:
             t = (torch.cos(torch.pi * (t + 1)) + 1) / 2
 
@@ -1050,7 +1078,8 @@ class ModelWrapper(LightningModule):
         ]
 
         video = torch.stack(images)
-        video = (video.clip(min=0, max=1) * 255).type(torch.uint8).cpu().numpy()
+        video = (video.clip(min=0, max=1) *
+                 255).type(torch.uint8).cpu().numpy()
         if loop_reverse:
             video = pack([video, video[::-1][1:-1]], "* c h w")[0]
         visualizations = {
