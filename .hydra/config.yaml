@@ -1,11 +1,11 @@
 dataset:
   view_sampler:
     name: evaluation
-    index_path: C:/Users/BBBS-AI-01/d/photogrammetry/runs/df3bc32a1913/output/depthsplat_work/chunks/evaluation_index.json
+    index_path: C:/Users/BBBS-AI-01/AppData/Local/Temp/pytest-of-BBBS-AI-01/pytest-28/test_e2e_run_depthsplat_produc0/job_output/depthsplat_work/chunks/evaluation_index.json
     num_context_views: 2
   name: dl3dv
   roots:
-  - C:/Users/BBBS-AI-01/d/photogrammetry/runs/df3bc32a1913/output/depthsplat_work/chunks
+  - C:/Users/BBBS-AI-01/AppData/Local/Temp/pytest-of-BBBS-AI-01/pytest-28/test_e2e_run_depthsplat_produc0/job_output/depthsplat_work/chunks
   make_baseline_1: false
   augment: true
   image_shape:
@@ -134,7 +134,7 @@ checkpointing:
   load: null
   every_n_train_steps: 5000
   save_top_k: 5
-  pretrained_model: C:/Users/BBBS-AI-01/d/photogrammetry/depthsplat/pretrained/depth_anything_v2_vits.pth
+  pretrained_model: C:/Users/BBBS-AI-01/d/depthsplat/pretrained/depthsplat-gs-base-re10kdl3dv-448x768-randview2-6-f8ddd845.pth
   pretrained_monodepth: null
   pretrained_mvdepth: null
   pretrained_depth: null
@@ -179,5 +179,5 @@ trainer:
   gradient_clip_val: 0.5
   num_sanity_val_steps: 2
   num_nodes: 1
-output_dir: C:/Users/BBBS-AI-01/d/photogrammetry/runs/df3bc32a1913/output/depthsplat_work/inference_output
+output_dir: C:/Users/BBBS-AI-01/AppData/Local/Temp/pytest-of-BBBS-AI-01/pytest-28/test_e2e_run_depthsplat_produc0/job_output/depthsplat_work/inference_output
 use_plugins: false

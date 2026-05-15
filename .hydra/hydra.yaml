@@ -117,24 +117,24 @@ hydra:
     - mode=test
     - dataset/view_sampler=evaluation
     - dataset.view_sampler.num_context_views=2
-    - dataset.view_sampler.index_path=C:/Users/BBBS-AI-01/d/photogrammetry/runs/df3bc32a1913/output/depthsplat_work/chunks/evaluation_index.json
-    - dataset.roots=[C:/Users/BBBS-AI-01/d/photogrammetry/runs/df3bc32a1913/output/depthsplat_work/chunks]
+    - dataset.view_sampler.index_path=C:/Users/BBBS-AI-01/AppData/Local/Temp/pytest-of-BBBS-AI-01/pytest-28/test_e2e_run_depthsplat_produc0/job_output/depthsplat_work/chunks/evaluation_index.json
+    - dataset.roots=[C:/Users/BBBS-AI-01/AppData/Local/Temp/pytest-of-BBBS-AI-01/pytest-28/test_e2e_run_depthsplat_produc0/job_output/depthsplat_work/chunks]
     - dataset.image_shape=[450,800]
     - dataset.ori_image_shape=[450,800]
     - dataset.skip_bad_shape=false
     - dataset.test_chunk_interval=1
     - dataset.test_times_per_scene=1
-    - checkpointing.pretrained_model=C:/Users/BBBS-AI-01/d/photogrammetry/depthsplat/pretrained/depth_anything_v2_vits.pth
+    - checkpointing.pretrained_model=C:/Users/BBBS-AI-01/d/depthsplat/pretrained/depthsplat-gs-base-re10kdl3dv-448x768-randview2-6-f8ddd845.pth
     - test.compute_scores=false
     - test.save_gaussian=true
     - test.save_video=false
     - test.save_image=true
-    - output_dir=C:/Users/BBBS-AI-01/d/photogrammetry/runs/df3bc32a1913/output/depthsplat_work/inference_output
+    - output_dir=C:/Users/BBBS-AI-01/AppData/Local/Temp/pytest-of-BBBS-AI-01/pytest-28/test_e2e_run_depthsplat_produc0/job_output/depthsplat_work/inference_output
     - wandb.mode=disabled
   job:
     name: main
     chdir: null
-    override_dirname: +experiment=dl3dv,checkpointing.pretrained_model=C:/Users/BBBS-AI-01/d/photogrammetry/depthsplat/pretrained/depth_anything_v2_vits.pth,dataset.image_shape=[450,800],dataset.ori_image_shape=[450,800],dataset.roots=[C:/Users/BBBS-AI-01/d/photogrammetry/runs/df3bc32a1913/output/depthsplat_work/chunks],dataset.skip_bad_shape=false,dataset.test_chunk_interval=1,dataset.test_times_per_scene=1,dataset.view_sampler.index_path=C:/Users/BBBS-AI-01/d/photogrammetry/runs/df3bc32a1913/output/depthsplat_work/chunks/evaluation_index.json,dataset.view_sampler.num_context_views=2,dataset/view_sampler=evaluation,mode=test,output_dir=C:/Users/BBBS-AI-01/d/photogrammetry/runs/df3bc32a1913/output/depthsplat_work/inference_output,test.compute_scores=false,test.save_gaussian=true,test.save_image=true,test.save_video=false,wandb.mode=disabled
+    override_dirname: +experiment=dl3dv,checkpointing.pretrained_model=C:/Users/BBBS-AI-01/d/depthsplat/pretrained/depthsplat-gs-base-re10kdl3dv-448x768-randview2-6-f8ddd845.pth,dataset.image_shape=[450,800],dataset.ori_image_shape=[450,800],dataset.roots=[C:/Users/BBBS-AI-01/AppData/Local/Temp/pytest-of-BBBS-AI-01/pytest-28/test_e2e_run_depthsplat_produc0/job_output/depthsplat_work/chunks],dataset.skip_bad_shape=false,dataset.test_chunk_interval=1,dataset.test_times_per_scene=1,dataset.view_sampler.index_path=C:/Users/BBBS-AI-01/AppData/Local/Temp/pytest-of-BBBS-AI-01/pytest-28/test_e2e_run_depthsplat_produc0/job_output/depthsplat_work/chunks/evaluation_index.json,dataset.view_sampler.num_context_views=2,dataset/view_sampler=evaluation,mode=test,output_dir=C:/Users/BBBS-AI-01/AppData/Local/Temp/pytest-of-BBBS-AI-01/pytest-28/test_e2e_run_depthsplat_produc0/job_output/depthsplat_work/inference_output,test.compute_scores=false,test.save_gaussian=true,test.save_image=true,test.save_video=false,wandb.mode=disabled
     id: ???
     num: ???
     config_name: main
